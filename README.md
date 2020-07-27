@@ -348,3 +348,21 @@ Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es 
   - Comunicará por el canal `a2r.${projectName}.${collectionName}.${id}` el patch de versión (para que todos los clientes suscritos la obtengan)
   - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones) 
   - Terminará el lock de **Redis** para este objeto
+
+> **Nota**: Como se puede ver, el método de `updatePokemonName` no necesita actualizar nada, dado que el cambio de nombre será propagado a los cliente de forma transparente por el sistema.
+
+## Handshake
+
+Todo
+
+## Permisos
+
+Todo
+
+## Latency Compensation
+
+Todo
+
+## Actualización en cascada
+
+Todo
