@@ -1,29 +1,21 @@
 # Live Objects Lab
 
-<!-- vscode-markdown-toc -->
-- 1. [Modelo de comunicación de deltas](#1-modelo-de-comunicación-de-deltas)
-- 2. [Rendeo isomórfico](#2-rendeo-isomórfico)
-  - 2.1. [Concepción del rendeo en 2 pasos](#21-concepción-del-rendeo-en-2-pasos)
-  - 2.2. [Versión pre-cacheada y actualizada](#22-versión-pre-cacheada-y-actualizada)
-- 3. [Definir un live object](#3-definir-un-live-object)
-  - 3.1. [Ejemplo de uso de live objects](#31-ejemplo-de-uso-de-live-objects)
-- 4. [El hook useLiveObjects](#4-el-hook-useLiveObjects)
-- 5. [Obtención de un Live Object en el lado servidor](#5-obtención-de-un-live-object-en-el-lado-servidor)
-- 6. [Mutación  de un Live Object en el lado servidor](#6-mutación-de-un-live-object-en-el-lado-servidor)
-  - 6.1. [Modificación de un Live Object](#61-modificación-de-un-live-object)
-  - 6.2. [Alta de un Live Object](#62-alta-de-un-live-object)
-  - 6.3. [Baja de un Live Object](#63-baja-de-un-live-object)
-- 7. [Handshake](#7-handshake)
-- 8. [Permisos](#8-permisos)
-- 9. [Latency Compensation](#9-latency-compensation)
-- 10. [Actualización en cascada](#10-actualización-en-cascada)
-
-<!-- vscode-markdown-toc-config
-	numbering=true
-	autoSave=true
-	/vscode-markdown-toc-config -->
-<!-- /vscode-markdown-toc -->
-
+1. [Modelo de comunicación de deltas](#1-modelo-de-comunicación-de-deltas)
+2. [Rendeo isomórfico](#2-rendeo-isomórfico)
+  2.1. [Concepción del rendeo en 2 pasos](#21-concepción-del-rendeo-en-2-pasos)
+  2.2. [Versión pre-cacheada y actualizada](#22-versión-pre-cacheada-y-actualizada)
+3. [Definir un live object](#3-definir-un-live-object)
+  3.1. [Ejemplo de uso de live objects](#31-ejemplo-de-uso-de-live-objects)
+4. [El hook useLiveObjects](#4-el-hook-useLiveObjects)
+5. [Obtención de un Live Object en el lado servidor](#5-obtención-de-un-live-object-en-el-lado-servidor)
+6. [Mutación  de un Live Object en el lado servidor](#6-mutación-de-un-live-object-en-el-lado-servidor)
+  6.1. [Modificación de un Live Object](#61-modificación-de-un-live-object)
+  6.2. [Alta de un Live Object](#62-alta-de-un-live-object)
+  6.3. [Baja de un Live Object](#63-baja-de-un-live-object)
+7. [Handshake](#7-handshake)
+8. [Permisos](#8-permisos)
+9. [Latency Compensation](#9-latency-compensation)
+10. [Actualización en cascada](#10-actualización-en-cascada)
 
 La tecnología de **Live Objects** forma parte del framework **A2R** y se encarga de gestionar la sincronización a tiempo real de la información almacenada en estructuras de datos que, en caso de ser modificadas en el servidor son actualizadas en todos los clientes que estén suscritos a dichas estructuras en tiempo real mediante la comunicación vía sockets.
 
