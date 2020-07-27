@@ -1,11 +1,11 @@
 # Live Objects Lab
 
 <!-- vscode-markdown-toc -->
-* 1. [Modelo de comunicación de deltas](#1-modelo-de-comunicación-de-deltas)
-* 2. [Rendeo isomórfico](#2-rendeo-isomórfico)
-	* 2.1. [Concepción del rendeo en 2 pasos](#Concepcindelrendeoen2pasos)
-	* 2.2. [Versión pre-cacheada y actualizada](#Versinpre-cacheadayactualizada)
-* 3. [Definir un live object](#Definirunliveobject)
+- 1. [Modelo de comunicación de deltas](#1-modelo-de-comunicación-de-deltas)
+- 2. [Rendeo isomórfico](#2-rendeo-isomórfico)
+	- 2.1. [Concepción del rendeo en 2 pasos](#2.1-concepción-del-rendeo-en-2-pasos)
+	- 2.2. [Versión pre-cacheada y actualizada](#Versinpre-cacheadayactualizada)
+- 3. [Definir un live object](#Definirunliveobject)
 	* 3.1. [Ejemplo de uso de live objects](#Ejemplodeusodeliveobjects)
 * 4. [El hook useLiveObjects](#ElhookuseLiveObjects)
 * 5. [Obtención de un Live Object en el lado servidor](#ObtencindeunLiveObjectenelladoservidor)
@@ -113,7 +113,7 @@ Este nuevo flujo es igual (aplicando algunas mejoras) a lo que desde un inicio q
 
 > Por ejemplo, en la actualidad hay varios proyectos de generación automatizada de sitemaps basados en [getStaticPaths](https://nextjs.org/docs/basic-features/data-fetching#getstaticpaths-static-generation) (el método que nos permite predefinir los parámetros de todas las rutas posibles para una página para poder generar una versión cacheada  de las mismas).
 
-###  2.1. <a name='Concepcindelrendeoen2pasos'></a>Concepción del rendeo en 2 pasos
+### 2.1. Concepción del rendeo en 2 pasos
 
 Especialmente en el caso de usar **getStaticProps** para permitir el cacheo de la información pero también cuando empleemos **getServerSideProps** para contenidos que se actualizan con frecuencia, intentaremos en la medida de lo posible concebir el ciclo de vida de la página de la siguiente manera:
 
