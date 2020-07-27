@@ -398,7 +398,7 @@ export default updatePokemonName;
   - Se guardará el nº de versión en `a2r.${projectName}.${collectionName}.${id}.v`
   - Se establecerá en `a2r.${projectName}.${collectionName}.${id}.v{version}` el conjunto de modificaciones a realizar para pasar de la versión anterior a esta (esto permitirá que si alguien obtuvo por SSR la versión 3 y al conectar el socket vamos por la 5 pueda obtener los dos patches necesarios (nota: los deltas caducan en una hora)
   - Comunicará por el canal `a2r.${projectName}.${collectionName}.${id}` el patch de versión (para que todos los clientes suscritos la obtengan)
-  - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones) 
+  - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${projectName}.${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones)
   - Terminará el lock de **Redis** para este objeto
 
 ### 6.2. Alta de un Live Object
@@ -451,7 +451,7 @@ Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
 - Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
 - Guardará en el diccionario de **Redis** `a2r.${projectName}.${collectionName}.${id}` la versión actual
 - Se guardará el nº de versión en `a2r.${projectName}.${collectionName}.${id}.v`
-- Añadirá a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones)
+- Añadirá a la cola de **Redis** de guardados pendientes el par `${projectName}.${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones)
 - Terminará el lock de **Redis** para este objeto
 - Retornará el documento resultante
 
@@ -504,7 +504,7 @@ Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
 - Se incrementará el Nº de versión
 - Se actualizará la versión `a2r.${projectName}.${collectionName}.${id}` y todas las anteriores a deleted  
 - Comunicará por el canal `a2r.${projectName}.${collectionName}.${id}` el mensaje `deleted` para borrarlo de los clientes suscritos
-- Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones eliminándolo de la BBDDs)
+- Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${projectName}.${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones eliminándolo de la BBDDs)
 - Terminará el lock de **Redis** para este objeto
 
 ## 7. Handshake
