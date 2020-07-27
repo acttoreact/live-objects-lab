@@ -317,6 +317,10 @@ Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es 
 
 ## Mutación  de un Live Object en el lado servidor
 
+Los siguientes ejemplos ilustran como interactuar con **Live Objects** desde los métodos de nuestro API en el lado servidor.
+
+### Modificación de un Live Object
+
 Si posteriormente implementásemos un método para actualizar su nombre, podríamos haciendo creando un fichero `server/api/updatePokemonName` con la siguiente implementación:
 
 ```typescript
@@ -349,9 +353,107 @@ Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es 
   - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones) 
   - Terminará el lock de **Redis** para este objeto
 
-> **Nota**: Como se puede ver, el método de `updatePokemonName` no necesita actualizar nada, dado que el cambio de nombre será propagado a los cliente de forma transparente por el sistema.
+### Alta de un Live Object
 
-> **TODO:** Ejemplos de alta y baja
+Para dar de alta una nueva PokemonCard podríamos haciendo creando un fichero `server/api/createPokemon` con la siguiente implementación:
+
+```typescript
+const createPokemon = async (newName:string): Promise<PokemonCard> => {
+  const _lo = generateNewLiveObjectInfo('PokemonCard');
+  const newPokemon: PokemonCard = {
+    _lo,
+    name: newName,
+  }
+
+  const pokemonCard = await createLiveObject<PokemonCard>(newPokemon);
+
+  return pokemonCard;
+}
+
+export default createPokemon;
+```
+
+Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es el nombre de la colección (o tipo) de live objects.
+
+**generateNewLiveObjectInfo** es una función que generará la información requerida por la propiedad '_lo' empleando el Interface LiveObject:
+
+```typescript
+/**
+ * Interface used by all Live Objects
+ */
+export interface LiveObject {
+  // _lo stores all the information about the LiveObject
+  _lo: {
+    // Live Object Type Name (similar to collection)
+    type: string;
+    // Unique ID of the live object
+    id: string;
+    // Auto incremental version number
+    v: number;
+    // Number of subscriptions (only in client Side)
+    n?: number;
+  };
+}
+```
+
+Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
+
+**createLiveObject** seguirá el siguiente proceso:
+
+- Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
+- Guardará en el diccionario de **Redis** `a2r.${projectName}.${collectionName}.${id}` la versión actual
+- Añadirá a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones)
+- Terminará el lock de **Redis** para este objeto
+- Retornará el documento resultante
+
+### Baja de un Live Object
+
+Para dar de alta una nueva PokemonCard podríamos haciendo creando un fichero `server/api/deletePokemon` con la siguiente implementación:
+
+```typescript
+const deletePokemon = async (id:string): Promise<void> => {
+  await deleteLiveObject('PokemonCard', id);  
+}
+
+export default deletePokemon;
+```
+
+Dónde `'PokemonCard'` es el nombre de la colección (o tipo) de live objects y `id` es el identificador de registro.
+
+**deletePokemon** es una función que generará la información requerida por la propiedad '_lo' empleando el Interface LiveObject:
+
+```typescript
+/**
+ * Interface used by all Live Objects
+ */
+export interface LiveObject {
+  // _lo stores all the information about the LiveObject
+  _lo: {
+    // Live Object Type Name (similar to collection)
+    type: string;
+    // Unique ID of the live object
+    id: string;
+    // Auto incremental version number
+    v: number;
+    // Number of subscriptions (only in client Side)
+    n?: number;
+  };
+}
+```
+
+Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
+
+**deleteLiveObject** seguirá el siguiente proceso:
+
+- Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
+- Guardará en el diccionario de **Redis** `a2r.${projectName}.${collectionName}.${id}` la cadena `deleted`
+- Actualizará la caducidad de la clave en **Redis** para expirar en 24 horas
+- Iniciará `jsonpatch.observe` del documento obtenido
+- Se incrementará el Nº de versión
+- Se actualizará la versión `a2r.${projectName}.${collectionName}.${id}` y todas las anteriores a deleted  
+- Comunicará por el canal `a2r.${projectName}.${collectionName}.${id}` el mensaje `deleted` para borrarlo de los clientes suscritos
+- Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones eliminándolo de la BBDDs)
+- Terminará el lock de **Redis** para este objeto
 
 ## Handshake
 
