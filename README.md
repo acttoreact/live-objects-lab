@@ -54,7 +54,7 @@ En las pruebas de stress ha demostrado rendimientos muy superiores al resto de l
 
 Este nuevo modelo transforma el modelo de ciclo de generación de página.
 
-Previamente se incorporaba al componente React de la página un método getInitialProps que podía ser ejecutada tanto en cliente como en servidor y que típicamente llamaba a un API (REST o GraphQL) para la carga de la información.
+Previamente se incorporaba al componente React de la página un método **getInitialProps** que podía ser ejecutada tanto en cliente como en servidor y que típicamente llamaba a un API (REST o GraphQL) para la carga de la información.
 
 Este método ha sido remplazado por dos opciones distintas:
 
@@ -355,6 +355,33 @@ export default updatePokemonName;
 
 Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es el nombre de la colección (o tipo) de live objects y `id` el identificador del objeto.
 
+Por defecto se obtendrá `projectName` del `name` del `package.json`, pero también puede especificarse pasando un tercer parámetro a la función:
+
+```typescript
+const [endPokemonMutation, pokemonCard] = await beginLiveObjectMutation<PokemonCard>('PokemonCard', id, 'pokemon-project');
+```
+
+Esto, combinado con el uso de una definición de persistencia común, permite que varios proyectos que emplean el mismo cluster de Redis compartan reactividad en un conjunto dado de **Live Objects**.
+
+Por otor lado también podrémos emplear un tercer elemento del array retornado para abortar :
+
+```typescript
+const updatePokemonName = async (id: string, newName:string): Promise<void> => {
+  const [endPokemonMutation, pokemonCard, abortPokemonMutation] = await beginLiveObjectMutation<PokemonCard>('PokemonCard', id);
+  try {
+    pokemonCard.name  = newName;
+    // valida el nombre de pokemon llamando a un API remoto que retorna una
+    // excepción en caso de no ser válido
+    await validatePokemon(pokemonCard);
+    await endPokemonMutation();
+  } catch {
+    await abortPokemonMutation();
+  }
+}
+
+export default updatePokemonName;
+```
+
 **beginLiveObjectMutation** seguirá el siguiente proceso:
 
 - Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
@@ -368,6 +395,7 @@ Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es 
   - Se incrementará el Nº de versión
   - Se obtendrán los cambios mediante `jsonpatch.generate` del documento  
   - Se actualizará la versión `a2r.${projectName}.${collectionName}.${id}` a una versión actualizada del documento
+  - Se guardará el nº de versión en `a2r.${projectName}.${collectionName}.${id}.v`
   - Se establecerá en `a2r.${projectName}.${collectionName}.${id}.v{version}` el conjunto de modificaciones a realizar para pasar de la versión anterior a esta (esto permitirá que si alguien obtuvo por SSR la versión 3 y al conectar el socket vamos por la 5 pueda obtener los dos patches necesarios (nota: los deltas caducan en una hora)
   - Comunicará por el canal `a2r.${projectName}.${collectionName}.${id}` el patch de versión (para que todos los clientes suscritos la obtengan)
   - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones) 
@@ -422,6 +450,7 @@ Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
 
 - Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
 - Guardará en el diccionario de **Redis** `a2r.${projectName}.${collectionName}.${id}` la versión actual
+- Se guardará el nº de versión en `a2r.${projectName}.${collectionName}.${id}.v`
 - Añadirá a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones)
 - Terminará el lock de **Redis** para este objeto
 - Retornará el documento resultante
@@ -466,6 +495,9 @@ Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
 **deleteLiveObject** seguirá el siguiente proceso:
 
 - Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
+- Incrementará el Nº de versión
+- Se guardará el nº de versión en `a2r.${projectName}.${collectionName}.${id}.v`
+- Se establecerá en `a2r.${projectName}.${collectionName}.${id}.v{version}` a `deleted`
 - Guardará en el diccionario de **Redis** `a2r.${projectName}.${collectionName}.${id}` la cadena `deleted`
 - Actualizará la caducidad de la clave en **Redis** para expirar en 24 horas
 - Iniciará `jsonpatch.observe` del documento obtenido
