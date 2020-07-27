@@ -147,6 +147,79 @@ export interface LiveObject {
 
 De hecho, tanto en las llamadas al API desde cliente como al cargar una página el framework recorrerá los nodos retornados para buscar una propiedad ``_lo`` que le permita identificar Live Objects para suscribirse a ellos.
 
+### Ejemplo de uso de live objects
+
+En la carpeta `server/model` crearemos un tipo para el objeto que queremos crear, dado que dicho tipo será tanto para el server como para el cliente:
+
+```typescript
+export interface Document extends LiveObject {
+  title: string;
+  subtitle: string;
+}
+```
+
+En la carpeta `server/liveObjects` crearemos un la definición de nuestro LiveObject (que informará sobre como inicializarlo y guardarlo).
+
+Para esto implementaremos el siguiente interface:
+
+```typescript
+/**
+ * Interface used to define a Live Object Collection
+ */
+export interface LiveCollection<T extends LiveObject>  {
+  /**
+   * Unique name of the collection
+   */
+  type: string;
+  /**
+   * Function that will be used to restore a LiveObject
+   * (typically from database)   
+  * @param id {string} unique identifier of the document
+  * @returns restored document or null in case it do not exists
+  */
+  loadLiveObject: (id: string) => Promise<T>;
+  /**
+   * Function that will be used to save LiveObject
+   * (typically to database)   
+  * @param obj {T} Document to save
+  */
+  saveLiveObject: (obj: T) => Promise<void>;
+  /**
+   * Function that will be used to delete a LiveObject
+   * (typically in the database)   
+  * @param id {string} unique identifier of the document
+  */
+  deleteLiveObject: (id: string) => Promise<void>;
+}
+```
+
+De la siguiente manera:
+
+```typescript
+const collection = db.collection('documents');
+
+const DocumentDefinition: LiveObjectDefinition<Document> = {
+  type: 'Document',
+  loadLiveObject: async (id) => {
+    return await collection.findOne({_id: id},{ projection: { '__lo': 1, title: 1, subtitle: 1}}) as Document;
+  },
+  saveLiveObject: async (obj) => {
+    await collection.updateOne(
+      { _id: obj._lo.id },
+      { $set: { ...obj } },
+      { upsert: true }
+    );
+  },
+  deleteLiveObject: async (id) => {
+    await collection.deleteOne({_id: id});
+  },
+}
+
+export default DocumentDefinition;
+```
+
+En este ejemplo implementamos una relación directa de un Live Object a un documento de mongo, pero podría ser un listado, una llamada a un API Rest, almacenamiento en ficheros, o cualquier otra implementación.
+
 ## El hook useLiveObjects
 
 En el caso de una página, podremos usar el *hook* **useLiveObjects** para identificar **Live Objects** en las propiedades de nuestra página y suscribirnos a los mismos:
@@ -188,7 +261,7 @@ El `hook` **useLiveObjects** tiene el siguiente ciclo de vida:
 
 - Espera a que el socket esté conectado
 - Recorre la recursivamente las propiedades obtenidas como parámetro buscando live objects
-- Se suscribe a todos ellos
+- Se suscribe a todos ellos: como parte de este proceso indica la versión actual de los objetos no solo suscribiéndose a cambios sino además obteniendo el patch para actualizar a la versión actual en caso de no estar actualizado
 - En caso de tener una versión más reciente en la caché local, los actualiza (en caso de una navegación cliente, el primer rendéo de un objeto cacheado ya aparecería con la versión actualizada)
 - En caso de modificarse cualquiera de los live objects, la página se re-rendeará
 - Al desmontarse se marcará para desuscribirse, pero no lo hará hasta un tiempo después (para evitar que si tienen suscripciones en común entre páginas se produzca una desuscripción y suscripción posterior en el servidor)

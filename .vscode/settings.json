@@ -19,6 +19,7 @@
     "downlevel",
     "finalizaci",
     "finalización",
+    "inicializarlo",
     "isom",
     "isomórfica",
     "isomórfico",
@@ -35,6 +36,7 @@
     "sincronizaci",
     "sincronización",
     "sourcemap",
-    "tslib"
+    "tslib",
+    "upsert"
   ]
 }
