@@ -124,3 +124,73 @@ Esto permite que (especialmente en el caso de getStaticProps), podamos obtener u
 
 ## Definir un live object
 
+Un live object siempre implementará este interface:
+
+```typescript
+/**
+ * Interface used by all Live Objects
+ */
+export interface LiveObject {
+  // _lo stores all the information about the LiveObject
+  _lo: {
+    // Live Object Type Name (similar to collection)
+    type: string;
+    // Unique ID of the live object
+    id: string;
+    // Auto incremental version number
+    v: number;
+    // Number of subscriptions (only in client Side)
+    n?: number;
+  };
+}
+```
+
+De hecho, tanto en las llamadas al API desde cliente como al cargar una página el framework recorrerá los nodos retornados para buscar una propiedad ``_lo`` que le permita identificar Live Objects para suscribirse a ellos.
+
+## El hook usePageLiveObjects
+
+En el caso de una página, podremos usar el *hook* **usePageLiveObjects** para identificar **Live Objects** en las propiedades de nuestra página y suscribirnos a los mismos.
+
+```typescript
+// Interfaz de datos obtenido por la página
+interface IndexProps {
+  pokemonCards: PokemonCardsLiveObject;
+}
+
+// Componente de la página
+const Index = (props: IndexProps): JSX.Element => {
+  usePageLiveObjects(props);
+  return (
+    <React.Fragment>
+      {props.pokemonCards.list.map((card) => (
+        <Card key={card.id} pokemonCard={card} />
+      ))}
+    </React.Fragment>
+  );
+};
+
+// Obtención de propiedades de la página
+// ejecutada solo en el lado servidor
+export const getStaticProps: GetStaticProps<IndexProps> = async () => {
+  // En este caso la lista de PokemonCards sería un LiveObject
+  const pokemonCards = await getPokemonCards();
+  return {
+    props: {
+      pokemonCards,
+    },
+  };
+};
+
+export default Index;
+```
+
+El `hook` **usePageLiveObjects** tiene el siguiente ciclo de vida:
+
+- Espera a que el socket esté conectado
+- Recorre la recursivamente las propiedades obtenidas como parámetro buscando live objects
+- Se suscribe a todos ellos
+- En caso de tener una versión más reciente en la caché local, los actualiza (en caso de una navegación cliente, el primer rendéo de un objeto cacheado ya aparecería con la versión actualizada)
+- Al desmontarse se marcará para desuscribirse, pero no lo hará hasta la finalización de la carga de la siguiente página (para evitar que si tienen suscripciones en común se produzca una desuscripción y suscripción posterior en el servidor)
+
+> **Nota:** Es importante tener el cuenta que cada vez que nos suscribimos a un LiveObject, incrementamos la variable del Nº de suscripciones en el cliente, y al desuscribirnos la decrementamos. Solamente cuanto es zero nos desuscribimos realmente en el lado servidor.
+
