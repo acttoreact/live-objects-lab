@@ -147,9 +147,9 @@ export interface LiveObject {
 
 De hecho, tanto en las llamadas al API desde cliente como al cargar una página el framework recorrerá los nodos retornados para buscar una propiedad ``_lo`` que le permita identificar Live Objects para suscribirse a ellos.
 
-## El hook usePageLiveObjects
+## El hook useLiveObjects
 
-En el caso de una página, podremos usar el *hook* **usePageLiveObjects** para identificar **Live Objects** en las propiedades de nuestra página y suscribirnos a los mismos.
+En el caso de una página, podremos usar el *hook* **useLiveObjects** para identificar **Live Objects** en las propiedades de nuestra página y suscribirnos a los mismos:
 
 ```typescript
 // Interfaz de datos obtenido por la página
@@ -159,7 +159,7 @@ interface IndexProps {
 
 // Componente de la página
 const Index = (props: IndexProps): JSX.Element => {
-  usePageLiveObjects(props);
+  useLiveObjects(props);
   return (
     <React.Fragment>
       {props.pokemonCards.list.map((card) => (
@@ -184,13 +184,46 @@ export const getStaticProps: GetStaticProps<IndexProps> = async () => {
 export default Index;
 ```
 
-El `hook` **usePageLiveObjects** tiene el siguiente ciclo de vida:
+El `hook` **useLiveObjects** tiene el siguiente ciclo de vida:
 
 - Espera a que el socket esté conectado
 - Recorre la recursivamente las propiedades obtenidas como parámetro buscando live objects
 - Se suscribe a todos ellos
 - En caso de tener una versión más reciente en la caché local, los actualiza (en caso de una navegación cliente, el primer rendéo de un objeto cacheado ya aparecería con la versión actualizada)
-- Al desmontarse se marcará para desuscribirse, pero no lo hará hasta la finalización de la carga de la siguiente página (para evitar que si tienen suscripciones en común se produzca una desuscripción y suscripción posterior en el servidor)
+- En caso de modificarse cualquiera de los live objects, la página se re-rendeará
+- Al desmontarse se marcará para desuscribirse, pero no lo hará hasta un tiempo después (para evitar que si tienen suscripciones en común entre páginas se produzca una desuscripción y suscripción posterior en el servidor)
 
 > **Nota:** Es importante tener el cuenta que cada vez que nos suscribimos a un LiveObject, incrementamos la variable del Nº de suscripciones en el cliente, y al desuscribirnos la decrementamos. Solamente cuanto es zero nos desuscribimos realmente en el lado servidor.
 
+Lo mismo podremos hacer con objetos obtenidos mediante nuestro API en lado cliente:
+
+```typescript
+interface CardProps {
+  id: string;
+}
+
+const Card = ({ id }: CardProps): JSX.Element => {
+  // Obtención de la información de un pokemon vía API de A2R
+  const pokemon = await API.getPokemon(id);
+  // Suscripción a cambios en la info de dicho pokemon
+  useLiveObjects(pokemon);
+  return (
+    <div className="card">
+      <span className="card--id">{`#${pokemonCard.id}`}</span>
+      <img
+        className="card--image"
+        src={pokemonCard.imageURL}
+        alt={pokemonCard.name}
+      />
+      <h2 className="card--name">{pokemonCard.name}</h2>
+      {
+        pokemonCard.types.map((type) => (
+          <span key={type} className="card--details">{type}</span>
+        ))
+      }
+    </div>
+  );
+};
+
+export default Card;
+```
