@@ -3,20 +3,20 @@
 <!-- vscode-markdown-toc -->
 - 1. [Modelo de comunicación de deltas](#1-modelo-de-comunicación-de-deltas)
 - 2. [Rendeo isomórfico](#2-rendeo-isomórfico)
-	- 2.1. [Concepción del rendeo en 2 pasos](#2.1-concepción-del-rendeo-en-2-pasos)
-	- 2.2. [Versión pre-cacheada y actualizada](#Versinpre-cacheadayactualizada)
-- 3. [Definir un live object](#Definirunliveobject)
-	* 3.1. [Ejemplo de uso de live objects](#Ejemplodeusodeliveobjects)
-* 4. [El hook useLiveObjects](#ElhookuseLiveObjects)
-* 5. [Obtención de un Live Object en el lado servidor](#ObtencindeunLiveObjectenelladoservidor)
-* 6. [Mutación  de un Live Object en el lado servidor](#MutacindeunLiveObjectenelladoservidor)
-	* 6.1. [Modificación de un Live Object](#ModificacindeunLiveObject)
-	* 6.2. [Alta de un Live Object](#AltadeunLiveObject)
-	* 6.3. [Baja de un Live Object](#BajadeunLiveObject)
-* 7. [Handshake](#Handshake)
-* 8. [Permisos](#Permisos)
-* 9. [Latency Compensation](#LatencyCompensation)
-* 10. [Actualización en cascada](#Actualizacinencascada)
+  - 2.1. [Concepción del rendeo en 2 pasos](#21-concepción-del-rendeo-en-2-pasos)
+  - 2.2. [Versión pre-cacheada y actualizada](#22-versión-pre-cacheada-y-actualizada)
+- 3. [Definir un live object](#3-definir-un-live-object)
+  - 3.1. [Ejemplo de uso de live objects](#31-ejemplo-de-uso-de-live-objects)
+- 4. [El hook useLiveObjects](#4-el-hook-useLiveObjects)
+- 5. [Obtención de un Live Object en el lado servidor](#5-obtención-de-un-live-object-en-el-lado-servidor)
+- 6. [Mutación  de un Live Object en el lado servidor](#6-mutación-de-un-live-object-en-el-lado-servidor)
+  - 6.1. [Modificación de un Live Object](#61-modificación-de-un-live-object)
+  - 6.2. [Alta de un Live Object](#62-alta-de-un-live-object)
+  - 6.3. [Baja de un Live Object](#63-baja-de-un-live-object)
+- 7. [Handshake](#7-handshake)
+- 8. [Permisos](#8-permisos)
+- 9. [Latency Compensation](#9-latency-compensation)
+- 10. [Actualización en cascada](#10-actualización-en-cascada)
 
 <!-- vscode-markdown-toc-config
 	numbering=true
@@ -141,13 +141,13 @@ De este modo, los dos elementos marcados en rojo se actualizarían nada más car
 
 > Nota sobre redirecciones: En la actualidad hay un debate abierto que se resolverá en la próxima versión sobre la forma correcta de realizar redirecciones  y códigos de error: [Return redirect from getServerSideProps](https://github.com/vercel/next.js/discussions/11281). El método actual (modificar el status code de res) funciona en el SSR pero se está buscando una implementación 100% isomórfica.
 
-###  2.2. <a name='Versinpre-cacheadayactualizada'></a>Versión pre-cacheada y actualizada
+### 2.2. Versión pre-cacheada y actualizada
 
 El uso de **Live Objects** es posible tanto en la información obtenida en el lado cliente a lo largo del ciclo de vida de la página como en los datos obtenidos del servidor (tanto mediante **getStaticProps** o **getServerSideProps**).
 
 Esto permite que (especialmente en el caso de getStaticProps), podamos obtener una versión cacheada del objeto (por ejemplo la página del producto) y, en caso de haber sido modificada desde la última vez que se cacheó, un patch posterior sobre su modificación.
 
-##  3. <a name='Definirunliveobject'></a>Definir un live object
+## 3. Definir un live object
 
 Un live object siempre implementará este interface:
 
@@ -172,7 +172,7 @@ export interface LiveObject {
 
 De hecho, tanto en las llamadas al API desde cliente como al cargar una página el framework recorrerá los nodos retornados para buscar una propiedad ``_lo`` que le permita identificar Live Objects para suscribirse a ellos.
 
-###  3.1. <a name='Ejemplodeusodeliveobjects'></a>Ejemplo de uso de live objects
+### 3.1. Ejemplo de uso de live objects
 
 En la carpeta `server/model` crearemos un tipo para el objeto que queremos crear, dado que dicho tipo será tanto para el server como para el cliente:
 
@@ -245,7 +245,7 @@ export default DocumentDefinition;
 
 En este ejemplo implementamos una relación directa de un Live Object a un documento de mongo, pero podría ser un listado, una llamada a un API Rest, almacenamiento en ficheros, o cualquier otra implementación.
 
-##  4. <a name='ElhookuseLiveObjects'></a>El hook useLiveObjects
+## 4. El hook useLiveObjects
 
 En el caso de una página, podremos usar el *hook* **useLiveObjects** para identificar **Live Objects** en las propiedades de nuestra página y suscribirnos a los mismos:
 
@@ -326,7 +326,7 @@ const Card = ({ id }: CardProps): JSX.Element => {
 export default Card;
 ```
 
-##  5. <a name='ObtencindeunLiveObjectenelladoservidor'></a>Obtención de un Live Object en el lado servidor
+## 5. Obtención de un Live Object en el lado servidor
 
 En el ejemplo anterior, el método getPokemon tendría la siguiente implementación (en el fichero `server/api/getPokemon`):
 
@@ -340,11 +340,11 @@ export default;
 
 Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es el nombre de la colección (o tipo) de live objects y `id` el identificador del objeto.
 
-##  6. <a name='MutacindeunLiveObjectenelladoservidor'></a>Mutación  de un Live Object en el lado servidor
+## 6. Mutación de un Live Object en el lado servidor
 
 Los siguientes ejemplos ilustran como interactuar con **Live Objects** desde los métodos de nuestro API en el lado servidor.
 
-###  6.1. <a name='ModificacindeunLiveObject'></a>Modificación de un Live Object
+### 6.1. Modificación de un Live Object
 
 Si posteriormente implementásemos un método para actualizar su nombre, podríamos haciendo creando un fichero `server/api/updatePokemonName` con la siguiente implementación:
 
@@ -378,7 +378,7 @@ Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es 
   - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones) 
   - Terminará el lock de **Redis** para este objeto
 
-###  6.2. <a name='AltadeunLiveObject'></a>Alta de un Live Object
+### 6.2. Alta de un Live Object
 
 Para dar de alta una nueva PokemonCard podríamos haciendo creando un fichero `server/api/createPokemon` con la siguiente implementación:
 
@@ -431,7 +431,7 @@ Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
 - Terminará el lock de **Redis** para este objeto
 - Retornará el documento resultante
 
-###  6.3. <a name='BajadeunLiveObject'></a>Baja de un Live Object
+### 6.3. Baja de un Live Object
 
 Para dar de alta una nueva PokemonCard podríamos haciendo creando un fichero `server/api/deletePokemon` con la siguiente implementación:
 
@@ -480,18 +480,18 @@ Asignado el tipo pasado como parámetro, versión 0 y un id aleatorio.
 - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones eliminándolo de la BBDDs)
 - Terminará el lock de **Redis** para este objeto
 
-##  7. <a name='Handshake'></a>Handshake
+## 7. Handshake
 
-Todo
+> TODO
 
-##  8. <a name='Permisos'></a>Permisos
+## 8. Permisos
 
-Todo
+> TODO
 
-##  9. <a name='LatencyCompensation'></a>Latency Compensation
+## 9. Latency Compensation
 
-Todo
+> TODO
 
-##  10. <a name='Actualizacinencascada'></a>Actualización en cascada
+## 10. Actualización en cascada
 
-Todo
+> TODO
