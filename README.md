@@ -315,3 +315,36 @@ export default;
 
 Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es el nombre de la colección (o tipo) de live objects y `id` el identificador del objeto.
 
+## Mutación  de un Live Object en el lado servidor
+
+Si posteriormente implementásemos un método para actualizar su nombre, podríamos haciendo creando un fichero `server/api/updatePokemonName` con la siguiente implementación:
+
+```typescript
+const updatePokemonName = async (id: string, newName:string): Promise<void> => {
+  const [endPokemonMutation, pokemonCard] = await beginLiveObjectMutation<PokemonCard>('PokemonCard', id);
+  pokemonCard.name  = newName;
+  await endPokemonMutation();
+}
+
+export default updatePokemonName;
+```
+
+Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es el nombre de la colección (o tipo) de live objects y `id` el identificador del objeto.
+
+**beginLiveObjectMutation** seguirá el siguiente proceso:
+
+- Realizará un lock en **Redis** que hará que cualquier otro nodo que intente realizar una mutación sobre el mismo objeto tenga que esperar a que finalize esta transacción
+- Obtendrá del diccionario de **Redis** `a2r.${projectName}.${collectionName}.${id}` la última versión existente
+- Si no existe, la obtendrá de la BBDDs, insertándola en la caché de **Redis**
+- Si tampoco existe en la BBDDs `pokemonCard` valdrá `null`
+- Actualizará la caducidad de la clave en **Redis** para expirar en 24 horas
+- Iniciará `jsonpatch.observe` del documento obtenido
+- Retornará un array de dos elementos, el primero una función para finalizar la transacción, el segundo el documento observado
+- Al invocar la función de finalización:
+  - Se incrementará el Nº de versión
+  - Se obtendrán los cambios mediante `jsonpatch.generate` del documento  
+  - Se actualizará la versión `a2r.${projectName}.${collectionName}.${id}` a una versión actualizada del documento
+  - Se establecerá en `a2r.${projectName}.${collectionName}.${id}.v{version}` el conjunto de modificaciones a realizar para pasar de la versión anterior a esta (esto permitirá que si alguien obtuvo por SSR la versión 3 y al conectar el socket vamos por la 5 pueda obtener los dos patches necesarios (nota: los deltas caducan en una hora)
+  - Comunicará por el canal `a2r.${projectName}.${collectionName}.${id}` el patch de versión (para que todos los clientes suscritos la obtengan)
+  - Añadirá (si no existe) a la cola de **Redis** de guardados pendientes el par `${collectionName}.${id}` (que se procesará de forma posterior de-bounceando las transacciones) 
+  - Terminará el lock de **Redis** para este objeto
