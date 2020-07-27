@@ -289,12 +289,11 @@ Lo mismo podremos hacer con objetos obtenidos mediante nuestro API en lado clien
 
 ```typescript
 interface CardProps {
-  id: string;
+  pokemon: PokemonCard;
 }
 
-const Card = ({ id }: CardProps): JSX.Element => {
-  // Obtención de la información de un pokemon vía API de A2R
-  const pokemon = await API.getPokemon(id);
+const Card = ({ pokemon }: CardProps): JSX.Element => {
+  
   // Suscripción a cambios en la info de dicho pokemon
   useLiveObjects(pokemon);
   return (
@@ -315,7 +314,11 @@ const Card = ({ id }: CardProps): JSX.Element => {
   );
 };
 
-export default Card;
+export default GetCard = async (id:string): Promise<Card> => {
+  // Obtención de la información de un pokemon vía API de A2R
+  const pokemon = await API.getPokemon(id);
+  return <Card pokemon={pokemon} />
+};
 ```
 
 ## 5. Obtención de un Live Object en el lado servidor
