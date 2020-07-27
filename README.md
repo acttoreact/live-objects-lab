@@ -300,3 +300,18 @@ const Card = ({ id }: CardProps): JSX.Element => {
 
 export default Card;
 ```
+
+## Obtención de un Live Object en el lado servidor
+
+En el ejemplo anterior, el método getPokemon tendría la siguiente implementación (en el fichero `server/api/getPokemon`):
+
+```typescript
+const getPokemon = async (id: string): Promise<PokemonCard> => {
+  return getLiveObject<PokemonCard>('PokemonCard', id);
+}
+
+export default;
+```
+
+Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es el nombre de la colección (o tipo) de live objects y `id` el identificador del objeto.
+
