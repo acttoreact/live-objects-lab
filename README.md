@@ -351,6 +351,8 @@ Dónde `PokemonCard` es el tipo retornado por el LiveObject, `'PokemonCard'` es 
 
 > **Nota**: Como se puede ver, el método de `updatePokemonName` no necesita actualizar nada, dado que el cambio de nombre será propagado a los cliente de forma transparente por el sistema.
 
+> **TODO:** Ejemplos de alta y baja
+
 ## Handshake
 
 Todo
